@@ -88,9 +88,24 @@ class MainActivity : AppCompatActivity() {
 
                 binding.tvAssistantText.text = "..."
                 lifecycleScope.launch {
-                    val response = textProcessing.process(text)
-                    binding.tvAssistantText.text = response
-                    speak(response, true)
+                    val (action, response, params) = textProcessing.process(text)
+                    Log.d("dadaya", "onResults: $action, $response")
+                    when (action) {
+                        Action.DEFAULT -> {
+                            binding.tvAssistantText.text = response
+                            speak(response, true)
+                        }
+                        Action.ERROR, Action.STOP -> {
+                            binding.tvAssistantText.text = response
+                            speak(response, false)
+                        }
+                        Action.CALC_ADD -> {
+//                            response = params["number"].numberValue
+                            binding.tvAssistantText.text = response
+                            speak(response, true)
+                        }
+                    }
+
                 }
             }
         }

@@ -1,10 +1,12 @@
 package ru.pavelapk.voice_assistant
 
 import android.content.Context
+import android.util.Log
 import com.google.api.gax.core.FixedCredentialsProvider
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.auth.oauth2.ServiceAccountCredentials
 import com.google.cloud.dialogflow.v2.*
+import com.google.protobuf.Value
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
@@ -36,21 +38,25 @@ class DialogflowTextProcessing(context: Context, private val languageCode: Strin
         }
     }
 
-    suspend fun process(input: String): String {
+    suspend fun process(input: String): Triple<Action, String, MutableMap<String, Value>?> {
         val textInput = TextInput.newBuilder().setText(input).setLanguageCode(languageCode)
 
         val queryInput: QueryInput = QueryInput.newBuilder().setText(textInput).build()
 
         val response = withContext(Dispatchers.IO) {
             dialogflowSessionsClient?.detectIntent(dialogflowSessionName, queryInput)
-        } ?: return "error"
+        } ?: return Triple(Action.ERROR, "Нет ответа", null)
 
         val queryResult = response.queryResult
-        return if (queryResult.fulfillmentMessagesCount > 0) {
-            queryResult.getFulfillmentMessages(0).text.getText(0)
-        } else {
-            "Я вас не понимаю"
-        }
+        val action = Action.fromName(queryResult.action)
+        return Triple(
+            action, if (queryResult.fulfillmentMessagesCount > 0) {
+                queryResult.getFulfillmentMessages(0).text.getText(0)
+            } else {
+                ""
+            },
+            queryResult.parameters.fieldsMap
+        )
     }
 
     fun close() {
