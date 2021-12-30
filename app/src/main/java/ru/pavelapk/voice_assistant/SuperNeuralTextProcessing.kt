@@ -4,7 +4,7 @@ class SuperNeuralTextProcessing {
     fun process(input: String): String {
         return when (input.lowercase()) {
             "привет" -> "Здравствуй"
-            "как дела" -> "Нормально 🐸"
+            "как дела" -> "Нормально"
 
             else -> "Я вас не понимаю"
         }

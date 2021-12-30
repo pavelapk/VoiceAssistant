@@ -33,6 +33,7 @@ class MainActivity : AppCompatActivity() {
 
         tts = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) {
+                tts.addEarcon("[frog]", packageName, R.raw.frog)
                 binding.btnSay.isEnabled = true
             } else {
                 Toast.makeText(this, "Ошибка TTS", Toast.LENGTH_SHORT).show()
@@ -50,5 +51,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun speak(text: String) {
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString())
+        tts.playEarcon("[frog]", TextToSpeech.QUEUE_ADD, null, UUID.randomUUID().toString())
     }
 }
