@@ -12,7 +12,9 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
+import kotlinx.coroutines.launch
 import ru.pavelapk.voice_assistant.databinding.ActivityMainBinding
 import java.util.*
 
@@ -22,6 +24,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tts: TextToSpeech
     private lateinit var recognizer: SpeechRecognizer
+    private lateinit var textProcessing: DialogflowTextProcessing
 
     private val requestPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
@@ -32,7 +35,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-    private val textProcessing = SuperNeuralTextProcessing()
 
     private val recognitionListener = object : RecognitionListener {
         override fun onReadyForSpeech(p0: Bundle?) {
@@ -77,23 +79,27 @@ class MainActivity : AppCompatActivity() {
         override fun onResults(results: Bundle?) {
             setLoudness(0f)
             if (results != null) {
-                for (key in results.keySet()) {
-                    Log.d("dadaya", "$key = '${results.get(key)}'")
-                }
+//                for (key in results.keySet()) {
+//                    Log.d("dadaya", "$key = '${results.get(key)}'")
+//                }
                 val text =
                     results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0) ?: ""
                 binding.tvMyText.text = text
-                val response = textProcessing.process(text)
-                binding.tvAssistantText.text = response
-                speak(response, true)
+
+                binding.tvAssistantText.text = "..."
+                lifecycleScope.launch {
+                    val response = textProcessing.process(text)
+                    binding.tvAssistantText.text = response
+                    speak(response, true)
+                }
             }
         }
 
         override fun onPartialResults(partialResult: Bundle?) {
             if (partialResult != null) {
-                for (key in partialResult.keySet()) {
-                    Log.d("dadaya", "$key = '${partialResult.get(key)}'")
-                }
+//                for (key in partialResult.keySet()) {
+//                    Log.d("dadaya", "$key = '${partialResult.get(key)}'")
+//                }
                 val text =
                     partialResult.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)
                         ?: ""
@@ -117,6 +123,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        textProcessing = DialogflowTextProcessing(this, "ru")
 
         tts = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -174,5 +182,10 @@ class MainActivity : AppCompatActivity() {
     private fun setLoudness(loudness: Float) {
         binding.viewLoudness.scaleX = loudness
         binding.viewLoudness.scaleY = loudness
+    }
+
+    override fun onDestroy() {
+        textProcessing.close()
+        super.onDestroy()
     }
 }

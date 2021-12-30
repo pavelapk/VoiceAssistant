@@ -33,11 +33,33 @@ android {
     buildFeatures {
         viewBinding true
     }
+    packagingOptions {
+        exclude 'META-INF/INDEX.LIST'
+    }
+}
+
+configurations {
+    all {
+        /**
+         * This exclusion solves the following Gradle build problem:
+         *   'commons-logging'/'httpclient' defines classes that conflict with classes now provided by Android.
+         *   Solutions include finding newer versions or alternative libraries that don't have the same problem
+         *   (for example, for httpclient use HttpUrlConnection or okhttp instead),
+         *   or repackaging the library using something like jarjar.
+         */
+        exclude module: 'httpclient'
+        exclude module: 'commons-logging'
+    }
 }
 
 dependencies {
     implementation 'com.github.kirich1409:viewbindingpropertydelegate-noreflection:1.5.4'
 
+    implementation 'com.google.cloud:google-cloud-dialogflow:3.3.0'
+    implementation 'io.grpc:grpc-okhttp:1.39.0'
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.0'
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.4.0'
     implementation 'com.google.android.material:material:1.4.0'
