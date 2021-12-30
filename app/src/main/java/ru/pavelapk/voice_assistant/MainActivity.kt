@@ -13,15 +13,25 @@ class MainActivity : AppCompatActivity() {
 
     private val binding by viewBinding(ActivityMainBinding::bind)
 
+    private lateinit var tts: TextToSpeech
+
+    private val textProcessing = SuperNeuralTextProcessing()
     private val recognizer = registerForActivityResult(StartRecognizer()) {
-        binding.tvText.text = it?.joinToString() ?: "error"
+        if (it != null) {
+            Toast.makeText(this, it.joinToString(), Toast.LENGTH_SHORT).show()
+            val response = textProcessing.process(it[0])
+            binding.tvText.text = response
+            speak(response)
+        } else {
+            binding.tvText.text = "error"
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val tts = TextToSpeech(this) { status ->
+        tts = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 binding.btnSay.isEnabled = true
             } else {
@@ -30,12 +40,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnSay.setOnClickListener {
-            tts.speak(
-                binding.tvText.text,
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                UUID.randomUUID().toString()
-            )
+            speak(binding.tvText.text.toString())
         }
 
         binding.btnListen.setOnClickListener {
@@ -43,5 +48,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
+    private fun speak(text: String) {
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString())
+    }
 }
